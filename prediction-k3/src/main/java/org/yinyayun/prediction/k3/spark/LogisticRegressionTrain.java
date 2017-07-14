@@ -50,6 +50,7 @@ public class LogisticRegressionTrain implements Serializable {
             JavaRDD<Tuple2<Object, Object>> scores = rddSplits[1]
                     .map(x -> new Tuple2<Object, Object>(model.predict(x.features()), x.label()));
             System.out.println(String.format("准确率：%s", new MulticlassMetrics(scores.rdd()).accuracy()));
+            model.save(sparkContext.sc(), "/home/hadoop/model/LogisticRegression.model");
         }
         catch (Exception e) {
             e.printStackTrace();
