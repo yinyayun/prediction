@@ -7,14 +7,15 @@ package org.yinyayun.prediction.k3.hmm;
 import java.io.File;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
-import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import org.yinyayun.prediction.k3.hmm.probablity.StateParser;
 import org.yinyayun.prediction.k3.hmm.state.StateDefineStrategy;
 import org.yinyayun.prediction.k3.hmm.state.StateDefineStrategyBySum;
+import org.yinyayun.prediction.k3.hmm.state.StateParser;
 import org.yinyayun.prediction.k3.hmm.state.StateStructs;
 
 /**
@@ -26,6 +27,11 @@ public class PredictNextNumberAndState {
     private StateStructs stateStructs;
     private StateDefineStrategy stateDefineStrategy = new StateDefineStrategyBySum();
     private static PredictNextNumberAndState predict;
+
+    public static void main(String[] args) {
+        List<PredictResult> res = PredictNextNumberAndState.getPredictInstance().predict(new int[][]{{3, 4, 5}}, 5);
+        System.out.println(res);
+    }
 
     public static PredictNextNumberAndState getPredictInstance() {
         if (predict == null) {
@@ -46,8 +52,21 @@ public class PredictNextNumberAndState {
         }
     }
 
-    public Map<String, Float> predict(int[][] historyNumbers) {
-        Map<String, Float> stateNumberProbability = new HashMap<String, Float>();
+    /**
+     * 给定历史记录
+     * 
+     * @param historyNumbers
+     * @param topN
+     * @return
+     */
+    public List<PredictResult> predict(int[][] historyNumbers, int topN) {
+        List<PredictResult> res = predict(historyNumbers);
+        Collections.sort(res, (x, y) -> x.probability > y.probability ? 1 : -1);
+        return res.subList(0, Math.min(topN, res.size()));
+    }
+
+    public List<PredictResult> predict(int[][] historyNumbers) {
+        List<PredictResult> res = new ArrayList<PredictResult>();
         StringBuilder builder = new StringBuilder();
         int[] lastNumber = {1, 1, 1};
         for (int i = 0; i < historyNumbers.length; i++) {
@@ -70,11 +89,11 @@ public class PredictNextNumberAndState {
             Map<String, Integer> numberCounts = stateStructs.getNumberCountForState(stateJumpString);
             numberCounts.forEach((predictNumber, predictNumberCount) -> {
                 float predictNumberProbability = predictNumberCount / (float) jumpstateCount;
-                stateNumberProbability.put(predictState.concat("_").concat(predictNumber),
-                        predictNumberProbability * predictStateProbaility);
+                res.add(new PredictResult(predictState, predictNumber,
+                        predictNumberProbability * predictStateProbaility));
             });
         });
-        return stateNumberProbability;
+        return res;
     }
 
     private int[] strToArray(String str) {
@@ -84,5 +103,22 @@ public class PredictNextNumberAndState {
             array[i] = Integer.valueOf(splits[i]);
         }
         return array;
+    }
+
+    public class PredictResult {
+        public final String state;
+        public final String number;
+        public final float probability;
+
+        public PredictResult(String state, String number, float probability) {
+            this.state = state;
+            this.number = number;
+            this.probability = probability;
+        }
+
+        @Override
+        public String toString() {
+            return String.format("state:%s,number:%s,probability:%s", state, number, probability);
+        }
     }
 }

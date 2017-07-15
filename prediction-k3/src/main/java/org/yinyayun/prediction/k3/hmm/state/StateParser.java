@@ -1,13 +1,9 @@
 /**
  * Copyright (c) 2016, yayunyin@126.com All Rights Reserved
  */
-package org.yinyayun.prediction.k3.hmm.probablity;
+package org.yinyayun.prediction.k3.hmm.state;
 
 import java.util.List;
-
-import org.yinyayun.prediction.k3.hmm.state.StateDefineStrategy;
-import org.yinyayun.prediction.k3.hmm.state.StateDefineStrategyBySum;
-import org.yinyayun.prediction.k3.hmm.state.StateStructs;
 
 /**
  * StateParser.java
