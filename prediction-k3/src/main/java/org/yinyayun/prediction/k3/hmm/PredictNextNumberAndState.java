@@ -29,7 +29,7 @@ public class PredictNextNumberAndState {
     private static PredictNextNumberAndState predict;
 
     public static void main(String[] args) {
-        List<PredictResult> res = PredictNextNumberAndState.getPredictInstance().predict(new int[][]{{3, 4, 5}}, 5);
+        List<PredictResult> res = PredictNextNumberAndState.getPredictInstance().predict(new int[][]{{1, 4, 5}}, 3);
         System.out.println(res);
     }
 
@@ -48,7 +48,7 @@ public class PredictNextNumberAndState {
             this.stateStructs = stateParser.parser(numbers);
         }
         catch (Exception e) {
-            throw new RuntimeException("load data error!");
+            throw new RuntimeException("load data error!", e);
         }
     }
 
@@ -61,7 +61,7 @@ public class PredictNextNumberAndState {
      */
     public List<PredictResult> predict(int[][] historyNumbers, int topN) {
         List<PredictResult> res = predict(historyNumbers);
-        Collections.sort(res, (x, y) -> x.probability > y.probability ? 1 : -1);
+        Collections.sort(res, (x, y) -> x.probability >= y.probability ? 1 : -1);
         return res.subList(0, Math.min(topN, res.size()));
     }
 

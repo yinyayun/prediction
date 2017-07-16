@@ -52,7 +52,7 @@ public class StateStructs {
             numberCounts = new HashMap<String, Integer>();
             stateForNumberCounts.put(state, numberCounts);
         }
-        String numberStr = String.format("%d%d%d", number);
+        String numberStr = intArrayToString(number);
         numberCounts.putIfAbsent(numberStr, 0);
         numberCounts.compute(numberStr, (k, v) -> ++v);
     }
@@ -102,5 +102,13 @@ public class StateStructs {
 
     public int getSamples() {
         return samples;
+    }
+
+    private String intArrayToString(int[] number) {
+        StringBuilder builder = new StringBuilder();
+        for (int n : number) {
+            builder.append(n);
+        }
+        return builder.toString();
     }
 }
