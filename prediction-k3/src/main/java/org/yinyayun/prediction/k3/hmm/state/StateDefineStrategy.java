@@ -11,15 +11,16 @@ import java.util.List;
  * @author yinyayun
  */
 public interface StateDefineStrategy {
+
     /**
      * 生成状态
      * 
      * @param lastNumbers
      * @param currentNumbers
      */
-    public String buildState(int[] lastNumbers, int[] currentNumbers);
+    public String buildCurrentState(int[] currentNumber);
 
-    public List<String> allState();
+    public String buildLastState(List<int[]> lastNumbers);
 
     public String startState();
 }

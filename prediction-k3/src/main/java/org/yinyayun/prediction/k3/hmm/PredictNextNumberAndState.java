@@ -10,13 +10,14 @@ import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.yinyayun.prediction.k3.hmm.state.StateDefineStrategy;
 import org.yinyayun.prediction.k3.hmm.state.StateDefineStrategyBySum;
-import org.yinyayun.prediction.k3.hmm.state.StateParser;
+import org.yinyayun.prediction.k3.hmm.state.StateParserStragegy;
 import org.yinyayun.prediction.k3.hmm.state.StateStructs;
 
 /**
@@ -25,26 +26,31 @@ import org.yinyayun.prediction.k3.hmm.state.StateStructs;
  * @author yinyayun
  */
 public class PredictNextNumberAndState {
+    private int byHistorySize;
     private StateStructs stateStructs;
-    private StateDefineStrategy stateDefineStrategy = new StateDefineStrategyBySum();
-    private static PredictNextNumberAndState predict;
+    private StateDefineStrategy stateDefineStrategy;
+    private static Map<Integer, PredictNextNumberAndState> instances = new HashMap<Integer, PredictNextNumberAndState>();
 
     public static void main(String[] args) {
-        int[][] history = new int[][]{{2,5,6}};
-        List<PredictResult> res = PredictNextNumberAndState.getPredictInstance().predict(history, 5);
+        int[][] history = new int[][]{{4, 6, 6}, {5, 6, 6}, {2, 2, 6}};
+        List<PredictResult> res = PredictNextNumberAndState.getPredictInstance(history.length).predict(history, 5);
         System.out.println(String.format("历史为：%s,下一期可能为：", Arrays.deepToString(history)));
         res.forEach(x -> System.out.println(x));
     }
 
-    public static PredictNextNumberAndState getPredictInstance() {
+    public static PredictNextNumberAndState getPredictInstance(int byHistorySize) {
+        PredictNextNumberAndState predict = instances.get(byHistorySize);
         if (predict == null) {
-            predict = new PredictNextNumberAndState("data/cp.txt");
+            predict = new PredictNextNumberAndState("data/cp.txt", byHistorySize, new StateDefineStrategyBySum());
+            instances.put(byHistorySize, predict);
         }
         return predict;
     }
 
-    private PredictNextNumberAndState(String dataPath) {
-        StateParser stateParser = new StateParser();
+    private PredictNextNumberAndState(String dataPath, int byHistorySize, StateDefineStrategy stateDefineStrategy) {
+        this.byHistorySize = byHistorySize;
+        this.stateDefineStrategy = stateDefineStrategy;
+        StateParserStragegy stateParser = new StateParserStragegy(stateDefineStrategy, byHistorySize);
         try {
             List<String> lines = Files.readAllLines(new File(dataPath).toPath(), Charset.forName("utf-8"));
             List<int[]> numbers = lines.stream().map(x -> strToArrayAndSort(x.split("\t")[1]))
@@ -70,22 +76,19 @@ public class PredictNextNumberAndState {
     }
 
     public List<PredictResult> predict(int[][] historyNumbers) {
+        if (historyNumbers.length != byHistorySize) {
+            throw new IllegalArgumentException(
+                    String.format("model train by historysize:%s,you give the numbers to predict is:%s", byHistorySize,
+                            historyNumbers.length));
+        }
         for (int i = 0; i < historyNumbers.length; i++) {
             Arrays.sort(historyNumbers[i]);
         }
         List<PredictResult> res = new ArrayList<PredictResult>();
-        StringBuilder builder = new StringBuilder();
-        int[] lastNumber = {1, 1, 1};
-        for (int i = 0; i < historyNumbers.length; i++) {
-            if (builder.length() > 0) {
-                builder.append("_");
-            }
-            builder.append(stateDefineStrategy.buildState(lastNumber, historyNumbers[i]));
-            lastNumber = historyNumbers[i];
-        }
-        String historyState = builder.toString();
+        List<int[]> historyNumberList = Arrays.stream(historyNumbers).collect(Collectors.toList());
+        String historyState = stateDefineStrategy.buildLastState(historyNumberList);
         // 历史状态转移状态可能性组合
-        int historyStateCount = stateStructs.getHistoryStateCount(historyState);
+        int historyStateCount = stateStructs.getlastStateCount(historyState);
         Map<String, Integer> stateCounts = stateStructs.getJumpStates(historyState);
         // 后续状态的概率计算
         stateCounts.forEach((predictState, predictStateCount) -> {

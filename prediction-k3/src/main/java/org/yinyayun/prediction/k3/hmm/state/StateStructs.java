@@ -19,18 +19,17 @@ public class StateStructs {
      */
     private Map<String, Map<String, Integer>> stateJumpCounts = new HashMap<String, Map<String, Integer>>();
     /**
-     * 某个状态的次数
+     * 转移状态频率
      */
-    private Map<String, Integer> historyStateCounts = new HashMap<String, Integer>();
+    private Map<String, Integer> jumpStateCount = new HashMap<String, Integer>();
+    /**
+     * 历史上某个状态出现的次数
+     */
+    private Map<String, Integer> lastStateCounts = new HashMap<String, Integer>();
     /**
      * 某一状态下出现一个号码的次数
      */
     private Map<String, Map<String, Integer>> stateForNumberCounts = new HashMap<String, Map<String, Integer>>();
-
-    /**
-     * 转移状态频率
-     */
-    private Map<String, Integer> jumpStateCount = new HashMap<String, Integer>();
 
     public StateStructs(int samples) {
         this.samples = samples;
@@ -57,9 +56,9 @@ public class StateStructs {
         numberCounts.compute(numberStr, (k, v) -> ++v);
     }
 
-    public void addHistoryStateCounts(String state) {
-        historyStateCounts.putIfAbsent(state, 0);
-        historyStateCounts.compute(state, (k, v) -> ++v);
+    public void addLastStateCounts(String state) {
+        lastStateCounts.putIfAbsent(state, 0);
+        lastStateCounts.compute(state, (k, v) -> ++v);
     }
 
     /**
@@ -96,8 +95,8 @@ public class StateStructs {
         return jumpStateCount.get(jumpState);
     }
 
-    public Integer getHistoryStateCount(String state) {
-        return historyStateCounts.get(state);
+    public Integer getlastStateCount(String state) {
+        return lastStateCounts.get(state);
     }
 
     public int getSamples() {

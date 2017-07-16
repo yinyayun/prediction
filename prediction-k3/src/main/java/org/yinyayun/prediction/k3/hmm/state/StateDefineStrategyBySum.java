@@ -3,7 +3,6 @@
  */
 package org.yinyayun.prediction.k3.hmm.state;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -15,25 +14,25 @@ import java.util.List;
 public class StateDefineStrategyBySum implements StateDefineStrategy {
 
     @Override
-    public String buildState(int[] lastNumbers, int[] currentNumbers) {
-        return String.valueOf(Arrays.stream(currentNumbers).reduce((x, y) -> x + y));
-    }
-
-    @Override
     public String startState() {
         return "3";
     }
 
     @Override
-    public List<String> allState() {
-        List<String> states = new ArrayList<String>();
-        for (int i = 1; i < 7; i++) {
-            for (int j = 1; j < 7; j++) {
-                for (int k = 1; k < 7; k++) {
-                    states.add(String.valueOf((i + j + k)));
-                }
-            }
-        }
-        return states;
+    public String buildCurrentState(int[] currentNumber) {
+        return String.valueOf(Arrays.stream(currentNumber).sum());
     }
+
+    @Override
+    public String buildLastState(List<int[]> lastNumbers) {
+        StringBuilder builder = new StringBuilder();
+        lastNumbers.stream().map(x -> Arrays.stream(x).sum()).forEach(x -> {
+            if (builder.length() > 0) {
+                builder.append("_");
+            }
+            builder.append(x);
+        });
+        return builder.toString();
+    }
+
 }
