@@ -8,6 +8,7 @@ import java.io.File;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -29,8 +30,10 @@ public class PredictNextNumberAndState {
     private static PredictNextNumberAndState predict;
 
     public static void main(String[] args) {
-        List<PredictResult> res = PredictNextNumberAndState.getPredictInstance().predict(new int[][]{{1, 4, 5}}, 3);
-        System.out.println(res);
+        int[][] history = new int[][]{{2,5,6}};
+        List<PredictResult> res = PredictNextNumberAndState.getPredictInstance().predict(history, 5);
+        System.out.println(String.format("历史为：%s,下一期可能为：", Arrays.deepToString(history)));
+        res.forEach(x -> System.out.println(x));
     }
 
     public static PredictNextNumberAndState getPredictInstance() {
@@ -44,7 +47,8 @@ public class PredictNextNumberAndState {
         StateParser stateParser = new StateParser();
         try {
             List<String> lines = Files.readAllLines(new File(dataPath).toPath(), Charset.forName("utf-8"));
-            List<int[]> numbers = lines.stream().map(x -> strToArray(x.split("\t")[1])).collect(Collectors.toList());
+            List<int[]> numbers = lines.stream().map(x -> strToArrayAndSort(x.split("\t")[1]))
+                    .collect(Collectors.toList());
             this.stateStructs = stateParser.parser(numbers);
         }
         catch (Exception e) {
@@ -61,11 +65,14 @@ public class PredictNextNumberAndState {
      */
     public List<PredictResult> predict(int[][] historyNumbers, int topN) {
         List<PredictResult> res = predict(historyNumbers);
-        Collections.sort(res, (x, y) -> x.probability >= y.probability ? 1 : -1);
+        Collections.sort(res, (x, y) -> x.probability >= y.probability ? -1 : 1);
         return res.subList(0, Math.min(topN, res.size()));
     }
 
     public List<PredictResult> predict(int[][] historyNumbers) {
+        for (int i = 0; i < historyNumbers.length; i++) {
+            Arrays.sort(historyNumbers[i]);
+        }
         List<PredictResult> res = new ArrayList<PredictResult>();
         StringBuilder builder = new StringBuilder();
         int[] lastNumber = {1, 1, 1};
@@ -96,12 +103,13 @@ public class PredictNextNumberAndState {
         return res;
     }
 
-    private int[] strToArray(String str) {
+    private int[] strToArrayAndSort(String str) {
         String[] splits = str.split(",");
         int[] array = new int[splits.length];
         for (int i = 0; i < array.length; i++) {
             array[i] = Integer.valueOf(splits[i]);
         }
+        Arrays.sort(array);
         return array;
     }
 
