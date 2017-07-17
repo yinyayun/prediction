@@ -7,6 +7,7 @@
 	<packaging>pom</packaging>
 	<modules>
 		<module>prediction-k3</module>
+		<module>prediction-k3-jdk7</module>
 	</modules>
 	<build>
 		<plugins>
