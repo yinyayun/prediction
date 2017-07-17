@@ -5,12 +5,13 @@
 package org.yinyayun.prediction.k3.hmm;
 
 import java.io.File;
+import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -21,35 +22,48 @@ import org.yinyayun.prediction.k3.hmm.state.StateParserStragegy;
 import org.yinyayun.prediction.k3.hmm.state.StateStructs;
 
 /**
- * PredictNextNumberAndState 预测下一个号码
+ * PredictNextNumberAndState 基于隐马进行预测，默认采用号码组的和值表示该组号码的状态
  * 
  * @author yinyayun
  */
 public class PredictNextNumberAndState {
     private int byHistorySize;
     private StateStructs stateStructs;
-    private StateDefineStrategy stateDefineStrategy;
-    private static Map<Integer, PredictNextNumberAndState> instances = new HashMap<Integer, PredictNextNumberAndState>();
+    private StateDefineStrategy stateDefineStrategy = new StateDefineStrategyBySum();
 
     public static void main(String[] args) {
-        int[][] history = new int[][]{{4, 6, 6}, {5, 6, 6}, {2, 2, 6}};
-        List<PredictResult> res = PredictNextNumberAndState.getPredictInstance(history.length).predict(history, 5);
+        int[][] history = new int[][]{{4, 6, 6}, {3, 4, 5}, {2, 2, 6}};
+        List<PredictResult> res = new PredictNextNumberAndState(history.length).predict(history, 5);
         System.out.println(String.format("历史为：%s,下一期可能为：", Arrays.deepToString(history)));
         res.forEach(x -> System.out.println(x));
     }
 
-    public static PredictNextNumberAndState getPredictInstance(int byHistorySize) {
-        PredictNextNumberAndState predict = instances.get(byHistorySize);
-        if (predict == null) {
-            predict = new PredictNextNumberAndState("data/cp.txt", byHistorySize, new StateDefineStrategyBySum());
-            instances.put(byHistorySize, predict);
+    /**
+     * @param byHistorySize 根据历史多少期推算下一期
+     */
+    public PredictNextNumberAndState(int byHistorySize) {
+        this.byHistorySize = byHistorySize;
+        StateParserStragegy stateParser = new StateParserStragegy(stateDefineStrategy, byHistorySize);
+        try (InputStream inputStream = PredictNextNumberAndState.class.getClassLoader().getResourceAsStream("cp.txt")) {
+            File tmpFile = File.createTempFile("cp-k3", "txt");
+            Files.copy(inputStream, tmpFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+            List<String> lines = Files.readAllLines(tmpFile.toPath(), Charset.forName("utf-8"));
+            List<int[]> numbers = lines.stream().map(x -> strToArrayAndSort(x.split("\t")[1]))
+                    .collect(Collectors.toList());
+            this.stateStructs = stateParser.parser(numbers);
+            tmpFile.delete();
         }
-        return predict;
+        catch (Exception e) {
+            throw new RuntimeException("load data error!", e);
+        }
     }
 
-    private PredictNextNumberAndState(String dataPath, int byHistorySize, StateDefineStrategy stateDefineStrategy) {
+    /**
+     * @param dataPath 彩票数据地址
+     * @param byHistorySize 根据历史多少期推算下一期
+     */
+    public PredictNextNumberAndState(String dataPath, int byHistorySize) {
         this.byHistorySize = byHistorySize;
-        this.stateDefineStrategy = stateDefineStrategy;
         StateParserStragegy stateParser = new StateParserStragegy(stateDefineStrategy, byHistorySize);
         try {
             List<String> lines = Files.readAllLines(new File(dataPath).toPath(), Charset.forName("utf-8"));
@@ -65,7 +79,7 @@ public class PredictNextNumberAndState {
     /**
      * 给定历史记录
      * 
-     * @param historyNumbers
+     * @param historyNumbers 该数据的长度必须和byHistorySize大小一致
      * @param topN
      * @return
      */
@@ -88,7 +102,11 @@ public class PredictNextNumberAndState {
         List<int[]> historyNumberList = Arrays.stream(historyNumbers).collect(Collectors.toList());
         String historyState = stateDefineStrategy.buildLastState(historyNumberList);
         // 历史状态转移状态可能性组合
-        int historyStateCount = stateStructs.getlastStateCount(historyState);
+        Integer historyStateCount = stateStructs.getlastStateCount(historyState);
+        // 历史上未有该状态
+        if (historyStateCount == null) {
+            return res;
+        }
         Map<String, Integer> stateCounts = stateStructs.getJumpStates(historyState);
         // 后续状态的概率计算
         stateCounts.forEach((predictState, predictStateCount) -> {
@@ -99,7 +117,7 @@ public class PredictNextNumberAndState {
             Map<String, Integer> numberCounts = stateStructs.getNumberCountForState(stateJumpString);
             numberCounts.forEach((predictNumber, predictNumberCount) -> {
                 float predictNumberProbability = predictNumberCount / (float) jumpstateCount;
-                res.add(new PredictResult(predictState, predictNumber,
+                res.add(new PredictResult(predictState, predictNumber, predictStateProbaility, predictNumberProbability,
                         predictNumberProbability * predictStateProbaility));
             });
         });
@@ -119,17 +137,23 @@ public class PredictNextNumberAndState {
     public class PredictResult {
         public final String state;
         public final String number;
+        public final float stateProbability;
+        public final float numberProbability;
         public final float probability;
 
-        public PredictResult(String state, String number, float probability) {
+        public PredictResult(String state, String number, float stateProbability, float numberProbability,
+                float probability) {
             this.state = state;
             this.number = number;
+            this.stateProbability = stateProbability;
+            this.numberProbability = numberProbability;
             this.probability = probability;
         }
 
         @Override
         public String toString() {
-            return String.format("state:%s,number:%s,probability:%s", state, number, probability);
+            return String.format("state:%s,number:%s,probability:%s*%s=%s", state, number, stateProbability,
+                    numberProbability, probability);
         }
     }
 }
