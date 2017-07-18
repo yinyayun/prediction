@@ -23,21 +23,18 @@ public class StateDefineStrategyBySum implements StateDefineStrategy {
         for (int n : currentNumber) {
             sum += n;
         }
-        return String.valueOf(sum);
+        return String.valueOf(String.format("%d!%d", currentNumber[1], sum));
     }
 
     @Override
     public String buildLastState(List<int[]> lastNumbers) {
         StringBuilder builder = new StringBuilder();
         for (int[] number : lastNumbers) {
-            int sum = 0;
-            for (int n : number) {
-                sum += n;
-            }
+            String state = buildCurrentState(number);
             if (builder.length() > 0) {
                 builder.append("_");
             }
-            builder.append(sum);
+            builder.append(state);
         }
         return builder.toString();
     }

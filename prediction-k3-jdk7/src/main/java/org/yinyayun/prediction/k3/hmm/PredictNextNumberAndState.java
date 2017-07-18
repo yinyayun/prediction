@@ -33,7 +33,7 @@ public class PredictNextNumberAndState {
     private StateDefineStrategy stateDefineStrategy = new StateDefineStrategyBySum();
 
     public static void main(String[] args) {
-        int[][] history = new int[][]{{4, 6, 6}, {3, 4, 5}, {2, 2, 6}};
+        int[][] history = new int[][]{{1, 6, 6}, {2, 3, 4}};
         List<PredictResult> res = new PredictNextNumberAndState(history.length).predict(history, 5);
         System.out.println(String.format("历史为：%s,下一期可能为：", Arrays.deepToString(history)));
         for (PredictResult predictResult : res) {
@@ -98,7 +98,12 @@ public class PredictNextNumberAndState {
 
             @Override
             public int compare(PredictResult o1, PredictResult o2) {
-                return o1.probability >= o2.probability ? -1 : 1;
+                if (o1.probability == o2.probability) {
+                    return 0;
+                }
+                else {
+                    return o1.probability > o2.probability ? -1 : 1;
+                }
             }
         });
         return res.subList(0, Math.min(topN, res.size()));

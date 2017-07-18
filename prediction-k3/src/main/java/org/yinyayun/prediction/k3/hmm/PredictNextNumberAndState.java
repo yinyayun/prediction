@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.yinyayun.prediction.k3.common.LineParserI;
 import org.yinyayun.prediction.k3.hmm.state.StateDefineStrategy;
 import org.yinyayun.prediction.k3.hmm.state.StateDefineStrategyBySum;
 import org.yinyayun.prediction.k3.hmm.state.StateParserStragegy;
@@ -32,23 +33,31 @@ public class PredictNextNumberAndState {
     private StateDefineStrategy stateDefineStrategy = new StateDefineStrategyBySum();
 
     public static void main(String[] args) {
-        int[][] history = new int[][]{{4, 6, 6}, {3, 4, 5}, {2, 2, 6}};
+        int[][] history = new int[][]{{1, 1, 6}, {1, 5, 6}, {1, 2, 6}};
         List<PredictResult> res = new PredictNextNumberAndState(history.length).predict(history, 5);
         System.out.println(String.format("历史为：%s,下一期可能为：", Arrays.deepToString(history)));
         res.forEach(x -> System.out.println(x));
     }
 
+    public PredictNextNumberAndState(int byHistorySize) {
+        this(byHistorySize, x -> x.split("\t")[1]);
+    }
+
+    public PredictNextNumberAndState(String dataPath, int byHistorySize) {
+        this(byHistorySize, x -> x.split("\t")[1]);
+    }
+
     /**
      * @param byHistorySize 根据历史多少期推算下一期
      */
-    public PredictNextNumberAndState(int byHistorySize) {
+    public PredictNextNumberAndState(int byHistorySize, LineParserI<String> lineParser) {
         this.byHistorySize = byHistorySize;
         StateParserStragegy stateParser = new StateParserStragegy(stateDefineStrategy, byHistorySize);
         try (InputStream inputStream = PredictNextNumberAndState.class.getClassLoader().getResourceAsStream("cp.txt")) {
             File tmpFile = File.createTempFile("cp-k3", "txt");
             Files.copy(inputStream, tmpFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
             List<String> lines = Files.readAllLines(tmpFile.toPath(), Charset.forName("utf-8"));
-            List<int[]> numbers = lines.stream().map(x -> strToArrayAndSort(x.split("\t")[1]))
+            List<int[]> numbers = lines.stream().map(x -> strToArrayAndSort(lineParser.apply(x)))
                     .collect(Collectors.toList());
             this.stateStructs = stateParser.parser(numbers);
             tmpFile.delete();
@@ -62,12 +71,12 @@ public class PredictNextNumberAndState {
      * @param dataPath 彩票数据地址
      * @param byHistorySize 根据历史多少期推算下一期
      */
-    public PredictNextNumberAndState(String dataPath, int byHistorySize) {
+    public PredictNextNumberAndState(String dataPath, int byHistorySize, LineParserI<String> lineParser) {
         this.byHistorySize = byHistorySize;
         StateParserStragegy stateParser = new StateParserStragegy(stateDefineStrategy, byHistorySize);
         try {
             List<String> lines = Files.readAllLines(new File(dataPath).toPath(), Charset.forName("utf-8"));
-            List<int[]> numbers = lines.stream().map(x -> strToArrayAndSort(x.split("\t")[1]))
+            List<int[]> numbers = lines.stream().map(x -> strToArrayAndSort(lineParser.apply(x)))
                     .collect(Collectors.toList());
             this.stateStructs = stateParser.parser(numbers);
         }
