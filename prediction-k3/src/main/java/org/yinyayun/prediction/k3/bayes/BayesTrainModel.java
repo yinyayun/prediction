@@ -9,12 +9,14 @@ import java.io.Serializable;
 import java.nio.file.Files;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.json.JSONObject;
+import org.yinyayun.prediction.preprocess.GenerateTrainDataSum;
 import org.yinyayun.prediction.preprocess.common.DataMapper;
 
 /**
@@ -23,18 +25,41 @@ import org.yinyayun.prediction.preprocess.common.DataMapper;
 public class BayesTrainModel {
 	private Map<Integer, Float> outPutProbabilitys;
 	private Map<Integer, Map<Integer, Float>> outPutConditionProbability;
+	private Map<Integer, Map<Integer, float[]>> outPutConditionProbabilitys;
 
 	public static void main(String[] args) throws Exception {
-		// List<DataMapper> datas = new
-		// GenerateTrainDataSum("data/train-cp-20.txt").generate(5);
+		List<DataMapper> datas = new GenerateTrainDataSum("data/train-cp-20.txt").generate(15);
 		BayesTrainModel model = new BayesTrainModel();
-		// model.train(datas);
+		model.train(datas);
 		// model.saveMode("data/bayes.model");
-		model.loadmodel("data/bayes.model");
-		model.predict(new int[] { 5, 4, 5, 6, 3 });
+		// model.loadmodel("data/bayes.model");
+		int[] output = model.predict(new int[] { 15, 10, 10, 10, 10, 5, 18, 15, 12, 17, 16, 10, 12, 17, 18 });
+		System.out.println(Arrays.toString(output));
 	}
 
-	public int predict(int[] inputs) {
+	// public int[] predict(int[] inputs) {
+	// List<OutPutProbability> outPutProbabilities = new
+	// ArrayList<OutPutProbability>();
+	// for (int i = 3; i <= 18; i++) {
+	// // 输出为i的概率
+	// float outi = outPutProbabilitys.get(i);
+	// Map<Integer, float[]> inputProbabilitys = outPutConditionProbabilitys.get(i);
+	// // 输出是i的条件下出险inputs的概率
+	// float condiction = 1f;
+	// for (int j = 0; j < inputs.length; j++) {
+	// condiction *= inputProbabilitys.get(inputs[j])[j];
+	// }
+	// outPutProbabilities.add(new OutPutProbability(i, condiction * outi));
+	// }
+	// Collections.sort(outPutProbabilities);
+	// int[] ret = new int[Math.min(3, outPutProbabilities.size())];
+	// for (int i = 0; i < ret.length; i++) {
+	// ret[i] = outPutProbabilities.get(i).getOut();
+	// }
+	// return ret;
+	// }
+
+	public int[] predict(int[] inputs) {
 		List<OutPutProbability> outPutProbabilities = new ArrayList<OutPutProbability>();
 		for (int i = 3; i <= 18; i++) {
 			// 输出为i的概率
@@ -48,7 +73,11 @@ public class BayesTrainModel {
 			outPutProbabilities.add(new OutPutProbability(i, condiction * outi));
 		}
 		Collections.sort(outPutProbabilities);
-		return outPutProbabilities.get(0).getOut();
+		int[] ret = new int[Math.min(3, outPutProbabilities.size())];
+		for (int i = 0; i < ret.length; i++) {
+			ret[i] = outPutProbabilities.get(i).getOut();
+		}
+		return ret;
 	}
 
 	public void train(List<DataMapper> datas) {
@@ -57,6 +86,7 @@ public class BayesTrainModel {
 		this.outPutProbabilitys = probabilityDistribution.outPutProbability();
 		// 输出标签在每个分量上的条件概率分布
 		this.outPutConditionProbability = probabilityDistribution.outPutConditionProbability();
+		this.outPutConditionProbabilitys = probabilityDistribution.outPutConditionProbabilitys();
 	}
 
 	public void saveMode(String savePath) throws IOException {

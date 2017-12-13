@@ -34,9 +34,11 @@ public class ProbabilityDistribution {
 			counts.put(dataMapper.getLabel(), ++count);
 		}
 		int dataSize = datas.size();
+		float all = 0;
 		Map<Integer, Float> probabilitys = new HashMap<Integer, Float>();
 		for (Entry<Integer, Integer> entry : counts.entrySet()) {
 			float probability = entry.getValue() / (dataSize * 1.0f);
+			all += probability;
 			probabilitys.put(entry.getKey(), probability);
 		}
 		return probabilitys;
@@ -80,15 +82,16 @@ public class ProbabilityDistribution {
 	public Map<Integer, Map<Integer, Float>> outPutConditionProbability() {
 		Map<Integer, Integer> outputCounts = new HashMap<Integer, Integer>();
 		Map<Integer, Map<Integer, Integer>> outPutConditionCounts = new HashMap<Integer, Map<Integer, Integer>>();
+		int total = 0;
 		for (DataMapper dataMapper : datas) {
 			int out = dataMapper.getLabel();
+			total += dataMapper.getInput().length;
 			// 输出标签计数
 			Integer count = outputCounts.get(out);
 			if (count == null) {
 				count = 0;
 			}
-			count += dataMapper.getInput().length;
-			outputCounts.put(out, count);
+			outputCounts.put(out, ++count);
 			// 输出标签对应每个输入分量的计数
 			Map<Integer, Integer> inputsCounts = outPutConditionCounts.get(out);
 			if (inputsCounts == null) {
@@ -107,14 +110,70 @@ public class ProbabilityDistribution {
 		Map<Integer, Map<Integer, Float>> outPutConditionProbabilitys = new HashMap<Integer, Map<Integer, Float>>();
 		for (Entry<Integer, Map<Integer, Integer>> entry : outPutConditionCounts.entrySet()) {
 			int output = entry.getKey();
-			int outputSamples = outputCounts.get(output);
+			int outputCount = outputCounts.get(output);
 			Map<Integer, Float> inputProbabilitys = new HashMap<Integer, Float>();
 			outPutConditionProbabilitys.put(output, inputProbabilitys);
 			for (Entry<Integer, Integer> inputsEntry : entry.getValue().entrySet()) {
 				int inputi = inputsEntry.getKey();
 				int inputiCountOnOut = inputsEntry.getValue();
-				float probabilitys = inputiCountOnOut / (outputSamples * 1.f);
+				float probabilitys = (inputiCountOnOut / (total * 1.f)) / (outputCount / (datas.size() * 1.0f));
 				inputProbabilitys.put(inputi, probabilitys);
+			}
+		}
+		return outPutConditionProbabilitys;
+	}
+
+	/**
+	 * <p>
+	 * 给定输出下对应输入的分向量位置上值对应的概率分布 。如：(x1,x2,x3)->y，计算在y的条件下x(2)=x2的概率
+	 * </p>
+	 * key:output value:input->int[];(该input出现在每个分量位置上的次数)
+	 * 
+	 * @return
+	 */
+	public Map<Integer, Map<Integer, float[]>> outPutConditionProbabilitys() {
+		Map<Integer, Integer> outputCounts = new HashMap<Integer, Integer>();
+		Map<Integer, Map<Integer, int[]>> outPutConditionCounts = new HashMap<Integer, Map<Integer, int[]>>();
+		int total = 0;
+		for (DataMapper dataMapper : datas) {
+			int out = dataMapper.getLabel();
+			total += dataMapper.getInput().length;
+			// 输出标签计数
+			Integer count = outputCounts.get(out);
+			if (count == null) {
+				count = 0;
+			}
+			outputCounts.put(out, ++count);
+			// 输出标签对应每个输入分量的计数
+			Map<Integer, int[]> inputsCounts = outPutConditionCounts.get(out);
+			if (inputsCounts == null) {
+				inputsCounts = new HashMap<Integer, int[]>();
+				outPutConditionCounts.put(out, inputsCounts);
+			}
+			int[] inputs = dataMapper.getInput();
+			for (int i = 0; i < inputs.length; i++) {
+				int[] inputCount = inputsCounts.get(inputs[i]);
+				if (inputCount == null) {
+					inputCount = new int[inputs.length];
+					inputsCounts.put(inputs[i], inputCount);
+				}
+				inputCount[i]++;
+			}
+		}
+		Map<Integer, Map<Integer, float[]>> outPutConditionProbabilitys = new HashMap<Integer, Map<Integer, float[]>>();
+		for (Entry<Integer, Map<Integer, int[]>> entry : outPutConditionCounts.entrySet()) {
+			int output = entry.getKey();
+			int outputCount = outputCounts.get(output);
+			Map<Integer, float[]> inputProbabilitys = new HashMap<Integer, float[]>();
+			outPutConditionProbabilitys.put(output, inputProbabilitys);
+			for (Entry<Integer, int[]> inputsEntry : entry.getValue().entrySet()) {
+				int inputi = inputsEntry.getKey();
+				int[] inputiCountOnOut = inputsEntry.getValue();
+				float[] inputiCountOnOutPro = new float[inputiCountOnOut.length];
+				for (int i = 0; i < inputiCountOnOut.length; i++) {
+					inputiCountOnOutPro[i] = inputiCountOnOut[i] / (outputCount * 1.0f);
+				}
+				inputProbabilitys.put(inputi, inputiCountOnOutPro);
 			}
 		}
 		return outPutConditionProbabilitys;
