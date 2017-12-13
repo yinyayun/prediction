@@ -41,8 +41,13 @@ public class StateStructs {
             stateCounts = new HashMap<String, Integer>();
             stateJumpCounts.put(lastState, stateCounts);
         }
-        stateCounts.putIfAbsent(currentState, 0);
-        stateCounts.compute(currentState, (k, v) -> ++v);
+        Integer count = stateCounts.get(currentState);
+        if (count == null) {
+            stateCounts.put(currentState, 1);
+        }
+        else {
+            stateCounts.put(currentState, ++count);
+        }
     }
 
     public void addNumberCountForCurrentStates(String state, int[] number) {
@@ -52,13 +57,23 @@ public class StateStructs {
             stateForNumberCounts.put(state, numberCounts);
         }
         String numberStr = intArrayToString(number);
-        numberCounts.putIfAbsent(numberStr, 0);
-        numberCounts.compute(numberStr, (k, v) -> ++v);
+        Integer count = numberCounts.get(numberStr);
+        if (count == null) {
+            numberCounts.put(numberStr, 1);
+        }
+        else {
+            numberCounts.put(numberStr, ++count);
+        }
     }
 
     public void addLastStateCounts(String state) {
-        lastStateCounts.putIfAbsent(state, 0);
-        lastStateCounts.compute(state, (k, v) -> ++v);
+        Integer count = lastStateCounts.get(state);
+        if (count == null) {
+            lastStateCounts.put(state, 1);
+        }
+        else {
+            lastStateCounts.put(state, ++count);
+        }
     }
 
     /**
@@ -82,8 +97,13 @@ public class StateStructs {
     }
 
     public void addJumpStateCount(String jumpState) {
-        jumpStateCount.putIfAbsent(jumpState, 0);
-        jumpStateCount.compute(jumpState, (k, v) -> ++v);
+        Integer count = jumpStateCount.get(jumpState);
+        if (count == null) {
+            jumpStateCount.put(jumpState, 1);
+        }
+        else {
+            jumpStateCount.put(jumpState, ++count);
+        }
     }
 
     /**
