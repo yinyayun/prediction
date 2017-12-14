@@ -34,11 +34,9 @@ public class ProbabilityDistribution {
 			counts.put(dataMapper.getLabel(), ++count);
 		}
 		int dataSize = datas.size();
-		float all = 0;
 		Map<Integer, Float> probabilitys = new HashMap<Integer, Float>();
 		for (Entry<Integer, Integer> entry : counts.entrySet()) {
 			float probability = entry.getValue() / (dataSize * 1.0f);
-			all += probability;
 			probabilitys.put(entry.getKey(), probability);
 		}
 		return probabilitys;
@@ -82,10 +80,8 @@ public class ProbabilityDistribution {
 	public Map<Integer, Map<Integer, Float>> outPutConditionProbability() {
 		Map<Integer, Integer> outputCounts = new HashMap<Integer, Integer>();
 		Map<Integer, Map<Integer, Integer>> outPutConditionCounts = new HashMap<Integer, Map<Integer, Integer>>();
-		int total = 0;
 		for (DataMapper dataMapper : datas) {
 			int out = dataMapper.getLabel();
-			total += dataMapper.getInput().length;
 			// 输出标签计数
 			Integer count = outputCounts.get(out);
 			if (count == null) {
@@ -116,7 +112,7 @@ public class ProbabilityDistribution {
 			for (Entry<Integer, Integer> inputsEntry : entry.getValue().entrySet()) {
 				int inputi = inputsEntry.getKey();
 				int inputiCountOnOut = inputsEntry.getValue();
-				float probabilitys = (inputiCountOnOut / (total * 1.f)) / (outputCount / (datas.size() * 1.0f));
+				float probabilitys = inputiCountOnOut / (outputCount * 1.0f);
 				inputProbabilitys.put(inputi, probabilitys);
 			}
 		}
@@ -134,10 +130,8 @@ public class ProbabilityDistribution {
 	public Map<Integer, Map<Integer, float[]>> outPutConditionProbabilitys() {
 		Map<Integer, Integer> outputCounts = new HashMap<Integer, Integer>();
 		Map<Integer, Map<Integer, int[]>> outPutConditionCounts = new HashMap<Integer, Map<Integer, int[]>>();
-		int total = 0;
 		for (DataMapper dataMapper : datas) {
 			int out = dataMapper.getLabel();
-			total += dataMapper.getInput().length;
 			// 输出标签计数
 			Integer count = outputCounts.get(out);
 			if (count == null) {
