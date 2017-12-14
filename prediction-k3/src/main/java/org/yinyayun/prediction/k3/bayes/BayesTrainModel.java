@@ -16,7 +16,7 @@ import java.util.Map;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
-import org.yinyayun.prediction.preprocess.common.DataMapper;
+import org.yinyayun.prediction.preprocess.common.DataSet;
 
 /**
  * @author yinyayun 贝叶斯模型
@@ -30,7 +30,7 @@ public class BayesTrainModel {
 		for (int i = 3; i <= 18; i++) {
 			// 输出为i的概率
 			float outi = outPutProbabilitys.get(i);
-			outi = 1;
+			// outi = 1;
 			Map<Integer, float[]> inputProbabilitys = outPutConditionProbabilitys.get(i);
 			// 输出是i的条件下出险inputs的概率
 			float condiction = 1f;
@@ -47,7 +47,7 @@ public class BayesTrainModel {
 		return ret;
 	}
 
-	public void train(List<DataMapper> datas) {
+	public void train(DataSet datas) {
 		ProbabilityDistribution probabilityDistribution = new ProbabilityDistribution(datas);
 		// 输出标签对应的概率分布
 		this.outPutProbabilitys = probabilityDistribution.outPutProbability();

@@ -6,7 +6,8 @@ package org.yinyayun.prediction.preprocess;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.yinyayun.prediction.preprocess.common.DataMapper;
+import org.yinyayun.prediction.preprocess.common.DataSample;
+import org.yinyayun.prediction.preprocess.common.DataSet;
 
 /**
  * @author yinyayun 根据历史N期的和值预测下一期的和值
@@ -29,8 +30,8 @@ public class GenerateTrainDataSum {
 	 * @param pastNumber
 	 * @throws Exception
 	 */
-	public List<DataMapper> generate(final int pastNumber) throws Exception {
-		List<DataMapper> datas = new ArrayList<DataMapper>();
+	public DataSet generate(final int pastNumber) throws Exception {
+		List<DataSample> datas = new ArrayList<DataSample>();
 		try (DataReader<int[]> dataReader = new DataReader<>(dataPath)) {
 			List<int[]> trainDatas = dataReader.readAllDatas();
 			for (int i = pastNumber; i < trainDatas.size(); i++) {
@@ -41,10 +42,10 @@ public class GenerateTrainDataSum {
 					int sum = sum(numbers);
 					inputs[j - i + pastNumber] = sum;
 				}
-				datas.add(new DataMapper(inputs, output));
+				datas.add(new DataSample(inputs, output));
 			}
 		}
-		return datas;
+		return new DataSet(datas, 16, 3);
 	}
 
 	private int sum(int[] array) {

@@ -6,11 +6,11 @@ package org.yinyayun.prediction.preprocess.common;
 /**
  * @author yinyayun 输入与输出的映射
  */
-public class DataMapper {
+public class DataSample {
 	private int[] input;
 	private int label;
 
-	public DataMapper(int[] input, int label) {
+	public DataSample(int[] input, int label) {
 		this.input = input;
 		this.label = label;
 	}

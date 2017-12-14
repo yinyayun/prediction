@@ -4,11 +4,11 @@
 package org.yinyayun.predict;
 
 import java.util.Arrays;
-import java.util.List;
 
 import org.yinyayun.prediction.k3.bayes.BayesTrainModel;
 import org.yinyayun.prediction.preprocess.GenerateTrainDataSum;
-import org.yinyayun.prediction.preprocess.common.DataMapper;
+import org.yinyayun.prediction.preprocess.common.DataSample;
+import org.yinyayun.prediction.preprocess.common.DataSet;
 
 /**
  * @author yinyayun
@@ -17,14 +17,14 @@ import org.yinyayun.prediction.preprocess.common.DataMapper;
 public class BayesTrainTest {
 	public static void main(String[] args) throws Exception {
 		int pastnumber = 8;
-		List<DataMapper> datas = new GenerateTrainDataSum("data/train-cp-20.txt").generate(pastnumber);
+		DataSet datas = new GenerateTrainDataSum("data/train-cp-20.txt").generate(pastnumber);
 		BayesTrainModel model = new BayesTrainModel();
 		model.train(datas);
 		model.saveMode("data/bayes.model");
 		model.loadModel("data/bayes.model");
 		int[] randoms = { 10, 500, 600, 200, 700, 800 };
 		for (int random : randoms) {
-			DataMapper dataMapper = datas.get(random);
+			DataSample dataMapper = datas.getDataSample(random);
 			int[] inputs = dataMapper.getInput();
 			int out = dataMapper.getLabel();
 			int[] y = model.predict1(inputs);
