@@ -70,60 +70,7 @@ public class ProbabilityDistribution {
 	}
 
 	/**
-	 * <p>
-	 * 给定输出下对应输入的分向量位置上值对应的概率分布 。如：(x1,x2,x3)->y，计算在y的条件下x(2)=x2的概率
-	 * </p>
-	 * key:output value:input->int[];(该input出现在每个分量位置上的次数)
-	 * 
-	 * @return
-	 */
-	public Map<Integer, Map<Integer, Float>> outPutConditionProbability() {
-		Map<Integer, Integer> outputCounts = new HashMap<Integer, Integer>();
-		Map<Integer, Map<Integer, Integer>> outPutConditionCounts = new HashMap<Integer, Map<Integer, Integer>>();
-		for (DataMapper dataMapper : datas) {
-			int out = dataMapper.getLabel();
-			// 输出标签计数
-			Integer count = outputCounts.get(out);
-			if (count == null) {
-				count = 0;
-			}
-			outputCounts.put(out, ++count);
-			// 输出标签对应每个输入分量的计数
-			Map<Integer, Integer> inputsCounts = outPutConditionCounts.get(out);
-			if (inputsCounts == null) {
-				inputsCounts = new HashMap<Integer, Integer>();
-				outPutConditionCounts.put(out, inputsCounts);
-			}
-			int[] inputs = dataMapper.getInput();
-			for (int i = 0; i < inputs.length; i++) {
-				Integer inputCount = inputsCounts.get(inputs[i]);
-				if (inputCount == null) {
-					inputCount = 0;
-				}
-				inputsCounts.put(inputs[i], ++inputCount);
-			}
-		}
-		Map<Integer, Map<Integer, Float>> outPutConditionProbabilitys = new HashMap<Integer, Map<Integer, Float>>();
-		for (Entry<Integer, Map<Integer, Integer>> entry : outPutConditionCounts.entrySet()) {
-			int output = entry.getKey();
-			int outputCount = outputCounts.get(output);
-			Map<Integer, Float> inputProbabilitys = new HashMap<Integer, Float>();
-			outPutConditionProbabilitys.put(output, inputProbabilitys);
-			for (Entry<Integer, Integer> inputsEntry : entry.getValue().entrySet()) {
-				int inputi = inputsEntry.getKey();
-				int inputiCountOnOut = inputsEntry.getValue();
-				float probabilitys = inputiCountOnOut / (outputCount * 1.0f);
-				inputProbabilitys.put(inputi, probabilitys);
-			}
-		}
-		return outPutConditionProbabilitys;
-	}
-
-	/**
-	 * <p>
-	 * 给定输出下对应输入的分向量位置上值对应的概率分布 。如：(x1,x2,x3)->y，计算在y的条件下x(2)=x2的概率
-	 * </p>
-	 * key:output value:input->int[];(该input出现在每个分量位置上的次数)
+	 * 在指定输出下，对应特征分量的条件概率
 	 * 
 	 * @return
 	 */
@@ -133,24 +80,15 @@ public class ProbabilityDistribution {
 		for (DataMapper dataMapper : datas) {
 			int out = dataMapper.getLabel();
 			// 输出标签计数
-			Integer count = outputCounts.get(out);
-			if (count == null) {
-				count = 0;
-			}
-			outputCounts.put(out, ++count);
+			outputCounts.compute(out, (k, v) -> v == null ? 0 : ++v);
 			// 输出标签对应每个输入分量的计数
+			outPutConditionCounts.putIfAbsent(out, new HashMap<Integer, int[]>());
 			Map<Integer, int[]> inputsCounts = outPutConditionCounts.get(out);
-			if (inputsCounts == null) {
-				inputsCounts = new HashMap<Integer, int[]>();
-				outPutConditionCounts.put(out, inputsCounts);
-			}
 			int[] inputs = dataMapper.getInput();
 			for (int i = 0; i < inputs.length; i++) {
+				// 每个特征出现在每个位置上的次数
+				inputsCounts.putIfAbsent(inputs[i], new int[inputs.length]);
 				int[] inputCount = inputsCounts.get(inputs[i]);
-				if (inputCount == null) {
-					inputCount = new int[inputs.length];
-					inputsCounts.put(inputs[i], inputCount);
-				}
 				inputCount[i]++;
 			}
 		}
@@ -172,5 +110,4 @@ public class ProbabilityDistribution {
 		}
 		return outPutConditionProbabilitys;
 	}
-
 }

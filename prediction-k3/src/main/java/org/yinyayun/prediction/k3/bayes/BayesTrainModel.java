@@ -23,7 +23,6 @@ import org.yinyayun.prediction.preprocess.common.DataMapper;
  */
 public class BayesTrainModel {
 	private Map<Integer, Float> outPutProbabilitys;
-	private Map<Integer, Map<Integer, Float>> outPutConditionProbability;
 	private Map<Integer, Map<Integer, float[]>> outPutConditionProbabilitys;
 
 	public int[] predict1(int[] inputs) {
@@ -48,41 +47,17 @@ public class BayesTrainModel {
 		return ret;
 	}
 
-	public int[] predict2(int[] inputs) {
-		List<OutPutProbability> outPutProbabilities = new ArrayList<OutPutProbability>();
-		for (int i = 3; i <= 18; i++) {
-			// 输出为i的概率
-			float outi = outPutProbabilitys.get(i);
-			outi = 1;
-			Map<Integer, Float> inputProbabilitys = outPutConditionProbability.get(i);
-			// 输出是i的条件下出险inputs的概率
-			float condiction = 1f;
-			for (int input : inputs) {
-				condiction *= inputProbabilitys.get(input);
-			}
-			outPutProbabilities.add(new OutPutProbability(i, condiction * outi));
-		}
-		Collections.sort(outPutProbabilities);
-		int[] ret = new int[Math.min(3, outPutProbabilities.size())];
-		for (int i = 0; i < ret.length; i++) {
-			ret[i] = outPutProbabilities.get(i).getOut();
-		}
-		return ret;
-	}
-
 	public void train(List<DataMapper> datas) {
 		ProbabilityDistribution probabilityDistribution = new ProbabilityDistribution(datas);
 		// 输出标签对应的概率分布
 		this.outPutProbabilitys = probabilityDistribution.outPutProbability();
 		// 输出标签在每个分量上的条件概率分布
-		this.outPutConditionProbability = probabilityDistribution.outPutConditionProbability();
 		this.outPutConditionProbabilitys = probabilityDistribution.outPutConditionProbabilitys();
 	}
 
 	public void saveMode(String savePath) throws IOException {
 		Map<String, Map> map = new HashMap<String, Map>();
 		map.put("outPutProbabilitys", outPutProbabilitys);
-		map.put("outPutConditionProbability", outPutConditionProbability);
 		map.put("outPutConditionProbabilitys", outPutConditionProbabilitys);
 		JSONObject jsonObject = new JSONObject(map);
 		Files.write(new File(savePath).toPath(), jsonObject.toString().getBytes(), StandardOpenOption.CREATE);
@@ -93,7 +68,6 @@ public class BayesTrainModel {
 		if (lines != null && lines.size() > 0) {
 			JSONObject json = new JSONObject(lines.get(0));
 			JSONObject outPutProbabilitysJson = json.getJSONObject("outPutProbabilitys");
-			JSONObject outPutConditionProbabilityJson = json.getJSONObject("outPutConditionProbability");
 			JSONObject outPutConditionProbabilitysJson = json.getJSONObject("outPutConditionProbabilitys");
 			//
 			this.outPutProbabilitys = new HashMap<Integer, Float>();
@@ -101,15 +75,6 @@ public class BayesTrainModel {
 				this.outPutProbabilitys.put(Integer.valueOf(key), (float) outPutProbabilitysJson.getDouble(key));
 			}
 			//
-			this.outPutConditionProbability = new HashMap<Integer, Map<Integer, Float>>();
-			for (String key : outPutConditionProbabilityJson.keySet()) {
-				Map<Integer, Float> map = new HashMap<Integer, Float>();
-				JSONObject jsonObject = outPutConditionProbabilityJson.getJSONObject(key);
-				for (String innerKey : jsonObject.keySet()) {
-					map.put(Integer.valueOf(innerKey), (float) jsonObject.getDouble(innerKey));
-				}
-				this.outPutConditionProbability.put(Integer.valueOf(key), map);
-			}
 			this.outPutConditionProbabilitys = new HashMap<Integer, Map<Integer, float[]>>();
 			for (String key : outPutConditionProbabilitysJson.keySet()) {
 				Map<Integer, float[]> map = new HashMap<Integer, float[]>();
