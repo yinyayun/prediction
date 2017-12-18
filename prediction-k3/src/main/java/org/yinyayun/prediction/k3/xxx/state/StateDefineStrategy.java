@@ -1,7 +1,7 @@
 /**
  * Copyright (c) 2016, yayunyin@126.com All Rights Reserved
  */
-package org.yinyayun.prediction.k3.hmm.state;
+package org.yinyayun.prediction.k3.xxx.state;
 
 import java.util.List;
 

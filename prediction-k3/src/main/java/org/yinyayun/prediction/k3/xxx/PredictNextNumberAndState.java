@@ -2,7 +2,7 @@
  * Copyright (c) 2017, yayunyin@126.com All Rights Reserved
  */
 
-package org.yinyayun.prediction.k3.hmm;
+package org.yinyayun.prediction.k3.xxx;
 
 import java.io.File;
 import java.io.InputStream;
@@ -17,10 +17,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import org.yinyayun.prediction.k3.hmm.state.StateDefineStrategy;
-import org.yinyayun.prediction.k3.hmm.state.StateDefineStrategyBySum;
-import org.yinyayun.prediction.k3.hmm.state.StateParserStragegy;
-import org.yinyayun.prediction.k3.hmm.state.StateStructs;
+import org.yinyayun.prediction.k3.xxx.state.StateDefineStrategy;
+import org.yinyayun.prediction.k3.xxx.state.StateDefineStrategyBySum;
+import org.yinyayun.prediction.k3.xxx.state.StateParserStragegy;
+import org.yinyayun.prediction.k3.xxx.state.StateStructs;
 
 /**
  * PredictNextNumberAndState 基于隐马进行预测，默认采用号码组的和值表示该组号码的状态

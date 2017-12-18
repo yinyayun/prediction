@@ -16,12 +16,13 @@ import java.util.Map;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.yinyayun.prediction.k3.Model;
 import org.yinyayun.prediction.preprocess.common.DataSet;
 
 /**
  * @author yinyayun 贝叶斯模型
  */
-public class BayesTrainModel {
+public class BayesTrainModel implements Model {
 	private Map<Integer, Float> outPutProbabilitys;
 	private Map<Integer, Map<Integer, float[]>> outPutConditionProbabilitys;
 
@@ -47,6 +48,7 @@ public class BayesTrainModel {
 		return ret;
 	}
 
+	@Override
 	public void train(DataSet datas) {
 		ProbabilityDistribution probabilityDistribution = new ProbabilityDistribution(datas);
 		// 输出标签对应的概率分布
